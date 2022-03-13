@@ -2,7 +2,7 @@
 
 Basic library for stm32f070rb made using register-level programming.
 
-##======= Creating Project ========##\n
+##======= Creating Project ========##
 1)New Project -> use the STMcube_HAL lib
 2)Clear all code in main.c
 3)Create new folder "Library" -> Two new folders
