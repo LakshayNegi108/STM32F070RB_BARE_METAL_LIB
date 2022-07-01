@@ -76,5 +76,7 @@ void LCD_WriteRegister8(uint8_t a, uint8_t d);
 void LCD_WriteRegister16(uint16_t a, uint16_t d);
 
 uint16_t LCD_Color565(uint8_t r, uint8_t g, uint8_t b);
-
+void LCD_pushColors(uint16_t *data, uint8_t len, bool first);
+void LCD_pushArray(int16_t x, int16_t y, uint16_t *arr, uint16_t len);
+void print_touch();
 #endif /* __ST7783_H */

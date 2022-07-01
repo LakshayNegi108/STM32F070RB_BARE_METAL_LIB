@@ -48,6 +48,10 @@ void sd_readOne(char *c);
 
 void sd_deMount();
 
+void getBMPImageData(char *file);
+void displayPic(char *c, uint16_t x, uint16_t y);
+void displayPic2(char *c, uint16_t row, uint16_t col);
 //void displayPic();
 
 #endif /* INC_SDCARD_H_ */
+

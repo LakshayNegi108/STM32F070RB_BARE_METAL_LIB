@@ -26,11 +26,23 @@
 #include "glcdfont.h"
 #include "stm32f070xb.h"
 #include "BML_DRIVER.h"
+#include "fonts.h"
 
 #define TFTWIDTH   240
 #define TFTHEIGHT  320
 
 #define TFTLCD_DELAY 0xFF
+
+uint8_t cursor_y  =0, cursor_x    = 0;
+uint8_t textsize  = 1;
+uint16_t textcolor =0xffff,  textbgcolor = 0xFFFF;
+uint8_t wrap      = true;
+uint8_t _cp437    = false;
+uint8_t rotation  = 0;
+
+#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
+#define pgm_read_word(addr) (*(const unsigned short *)(addr))
+#define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
 
 // GPIO to data bus pin connections
 // ---- PORT Pin ---     --- Data ----
@@ -178,8 +190,8 @@ static void GPIO_Init(void) {
 
 	/*Configure GPIO pins : PA0 PA2 PA5 PA8
 	 PA9 PA10 */
-	GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_2 | GPIO_PIN_8 | GPIO_PIN_9
-			| GPIO_PIN_10 | GPIO_PIN_1 | GPIO_PIN_4;
+	GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10
+			| GPIO_PIN_1 | GPIO_PIN_4;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
@@ -676,6 +688,7 @@ void LCD_DrawChar(int16_t x, int16_t y, unsigned char c, uint16_t color,
 	}
 }
 
+
 /**
  * \brief Draws a filled circle defined by a pair of coordinates and radius
  * 
@@ -906,10 +919,10 @@ void LCD_pushColors(uint16_t *data, uint8_t len, bool first) {
 	uint8_t hi, lo;
 	LCD_CS_LOW();
 
-	if(first == true){
-	LCD_CD_LOW();
-	LCD_Write8(0x00); // High byte of GRAM register...
-	LCD_Write8(0x22); // Write data to GRAM
+	if (first == true) {
+		LCD_CD_LOW();
+		LCD_Write8(0x00); // High byte of GRAM register...
+		LCD_Write8(0x22); // Write data to GRAM
 	}
 
 	LCD_CD_HIGH();
@@ -921,6 +934,22 @@ void LCD_pushColors(uint16_t *data, uint8_t len, bool first) {
 		LCD_Write8(lo);
 	}
 	LCD_CS_HIGH();
+}
+
+void LCD_pushArray(int16_t x, int16_t y, uint16_t *arr, uint16_t len) {
+	if ((x < 0) || (y < 0) || (x >= TFTWIDTH) || (y >= TFTHEIGHT))
+		return;
+
+	gpio_write(GPIOB, 0, LOW);
+
+
+	for (int i = 0; i < len; i++) {
+		LCD_WriteRegister16(0x0020, x + i);
+		LCD_WriteRegister16(0x0021, y);
+		LCD_WriteRegister16(0x0022, arr[i]);
+	}
+
+	gpio_write(GPIOB, 0, HIGH);
 }
 
 /**
@@ -1185,5 +1214,71 @@ void LCD_WriteRegister16(uint16_t a, uint16_t d) {
 	LCD_CD_HIGH();
 	LCD_Write8(hi);
 	LCD_Write8(lo);
+}
+
+size_t write(uint8_t c)
+{
+	{
+
+        if(c == '\n') {
+            cursor_x  = 0;
+            cursor_y += (int16_t)textsize *
+                        (uint8_t)pgm_read_byte(&gfxFont->yAdvance);
+        } else if(c != '\r') {
+            uint8_t first = pgm_read_byte(&gfxFont->first);
+            if((c >= first) && (c <= (uint8_t)pgm_read_byte(&gfxFont->last))) {
+                GFXglyph *glyph = &(((GFXglyph *)pgm_read_pointer(
+                  &gfxFont->glyph))[c - first]);
+                uint8_t   w     = pgm_read_byte(&glyph->width),
+                          h     = pgm_read_byte(&glyph->height);
+                if((w > 0) && (h > 0)) { // Is there an associated bitmap?
+                    int16_t xo = (int8_t)pgm_read_byte(&glyph->xOffset); // sic
+                    if(wrap && ((cursor_x + textsize * (xo + w)) > TFTWIDTH)) {
+                        cursor_x  = 0;
+                        cursor_y += (int16_t)textsize *
+                          (uint8_t)pgm_read_byte(&gfxFont->yAdvance);
+                    }
+                    LCD_DrawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize);
+                }
+//                cursor_x += (uint8_t)pgm_read_byte(&glyph->xAdvance) * (int16_t)textsize;
+                cursor_x += 13;
+            }
+        }
+
+    }
+    return 1;
+}
+
+void setFont(const GFXfont *f) {
+    if(f) {            // Font struct pointer passed in?
+        if(!gfxFont) { // And no current font struct?
+            // Switching from classic to new font behavior.
+            // Move cursor pos down 6 pixels so it's on baseline.
+            cursor_y += 6;
+        }
+    } else if(gfxFont) { // NULL passed.  Current font struct defined?
+        // Switching from new to classic font behavior.
+        // Move cursor pos up 6 pixels so it's at top-left of char.
+//        cursor_y -= 6;
+    }
+    gfxFont = (GFXfont *)f;
+}
+
+void printnewtstr (int row, int col, uint16_t txtcolor, uint16_t textbgcol, const GFXfont *f, uint8_t txtsize, uint8_t *str)
+{
+	setFont(f);
+	textcolor = txtcolor;
+	textbgcolor = textbgcol;
+	textsize = (txtsize > 0) ? txtsize : 1;
+//	setCursor(0, row);
+//	LCD_SetCursor(0, row);
+	cursor_x = row;
+	cursor_y = col;
+	while (*str) write (*str++);
+}
+
+void printstr (uint8_t *str)
+{
+	while (*str) write (*str++);
 }
 

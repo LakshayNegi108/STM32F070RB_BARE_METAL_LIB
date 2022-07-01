@@ -6,14 +6,16 @@
  */
 
 #include "SDCard.h"
+#include "st7783.h"
+
 void sd_mount() {
 	//Open the file system
 	fres = f_mount(&FatFs, "", 1); //1=mount now
 	if (fres != FR_OK) {
 		print("Error in Mounting --- ");
 		print("f_mount error (%i)\r\n", fres);
-		while (1)
-			;
+//		while (1)
+//			;
 	}
 }
 
@@ -27,8 +29,8 @@ void sd_space() {
 	if (fres != FR_OK) {
 		print("Error in fetching space data --- ");
 		print("f_getfree error (%i)\r\n", fres);
-		while (1)
-			;
+//		while (1)
+//			;
 	}
 
 	//Formula comes from ChaN's documentation
@@ -103,8 +105,8 @@ uint8_t sd_read8(char *c, int offset) {
 
 uint16_t sd_read16bits(char *c, int offset) {
 	uint16_t result;
-	((uint8_t*) &result)[1] = sd_read8bits(c, offset);
-	((uint8_t*) &result)[0] = sd_read8bits(c, offset + 1);
+	((uint8_t*) &result)[0] = sd_read8bits(c, offset);
+	((uint8_t*) &result)[1] = sd_read8bits(c, offset + 1);
 	return result;
 }
 
@@ -135,10 +137,10 @@ uint32_t sd_read24(char *c, int offset) {
 
 uint32_t sd_read32bits(char *c, int offset) {
 	uint32_t result;
-	((uint8_t*) &result)[3] = sd_read8bits(c, offset);
-	((uint8_t*) &result)[2] = sd_read8bits(c, offset + 1);
-	((uint8_t*) &result)[1] = sd_read8bits(c, offset + 2);
-	((uint8_t*) &result)[0] = sd_read8bits(c, offset + 3);
+	((uint8_t*) &result)[0] = sd_read8bits(c, offset);
+	((uint8_t*) &result)[1] = sd_read8bits(c, offset + 1);
+	((uint8_t*) &result)[2] = sd_read8bits(c, offset + 2);
+	((uint8_t*) &result)[3] = sd_read8bits(c, offset + 3);
 	return result;
 }
 
@@ -160,8 +162,7 @@ void sd_writeArray(char *c, uint16_t *data, int len) {
 	//Copy in a string
 	uint16_t data_buf[len];
 	print("%X\n", data[0]);
-	for(int x = 0; x < len; x++)
-	{
+	for (int x = 0; x < len; x++) {
 		data_buf[x] = data[x];
 	}
 //	strncpy(data_buf, data, len);
@@ -286,142 +287,227 @@ void sd_readOne(char *c) {
 
 }
 
-//void bmpDraw(char *filename, int x, int y) {
-//
-////  uint8_t     bmpFile;
-//	int bmpWidth, bmpHeight;   // W+H in pixels
-//	uint8_t bmpDepth;              // Bit depth (currently must be 24)
-//	uint32_t bmpImageoffset;        // Start of image data in file
-//	uint32_t rowSize;               // Not always = bmpWidth; may have padding
-//	uint8_t sdbuffer[3 * BUFFPIXEL]; // pixel in buffer (R+G+B per pixel)
-//	uint16_t lcdbuffer[BUFFPIXEL];  // pixel out buffer (16-bit per pixel)
-//	uint8_t buffidx = sizeof(sdbuffer); // Current position in sdbuffer
-//	bool goodBmp = false;       // Set to true on valid header parse
-//	bool flip = true;        // BMP is stored bottom-to-top
-//	int w, h, row, col;
-//	uint8_t r, g, b;
-//	uint32_t pos = 0;
-//	uint8_t lcdidx = 0;
-//	bool first = true;
-//	int offset = 0;
-//
-//	if ((x >= 240) || (y >= 320))
-//		return;
-//
-//	print("\n");
-//	print("Loading image '");
-//	print(filename);
-//	print('\'');
-//	// Open requested file on SD card
-////	if ((sd_openFile(filename)) == 0) {
-////		print("File not found");
-////		return;
-////	}
-//	sd_openFile(filename);
-//	// Parse BMP header
-//	if (sd_read16bits(filename, offset) == 0x4D42) { // BMP signature
-//		offset += 2;
-//		print("File size: ");
-//		print("%X\n", sd_read32bits(filename, offset));
-//		offset += 4;
-////    (void)read32(bmpFile); // Read & ignore creator bytes
-//		offset += 4;
-//		bmpImageoffset = sd_read32bits(filename, offset); // Start of image data
-//		offset += 4;
-//		print("Image Offset: ");
-//		print("%X\n", bmpImageoffset);
-//		// Read DIB header
-//		print("Header size: ");
-//		print("%X\n", sd_read32bits(filename, offset));
-//		offset += 4;
-//		bmpWidth = sd_read32bits(filename, offset);
-//		offset += 4;
-//		bmpHeight = sd_read32bits(filename, offset);
-//		offset += 4;
-//		if (sd_read16bits(filename, offset) == 1) { // # planes -- must be '1'
-//			offset += 2;
-//			bmpDepth = sd_read16bits(filename, offset); // bits per pixel
-//			offset += 2;
-//			print("Bit Depth: ");
-//			print("%X\n", bmpDepth);
-//			uint32_t compress = sd_read32bits(filename, offset);
-////			if ((bmpDepth == 18) && (compress == 0)) { // 0 = uncompressed
-//			offset += 4;
-//			goodBmp = true; // Supported BMP format -- proceed!
-//			print("Image size: ");
-//			print("%X", bmpWidth);
-//			print("x");
-//			print("%X\n", bmpHeight);
-//
-//			// BMP rows are padded (if needed) to 4-byte boundary
-//			rowSize = (bmpWidth * 3 + 3) & ~3;
-//
-//			// If bmpHeight is negative, image is in top-down order.
-//			// This is not canon but has been observed in the wild.
-//			if (bmpHeight < 0) {
-//				bmpHeight = -bmpHeight;
-//				flip = false;
-//			}
-//
-//			// Crop area to be loaded
-//			w = bmpWidth;
-//			h = bmpHeight;
-//			if ((x + w - 1) >= 240)
-//				w = 240 - x;
-//			if ((y + h - 1) >= 320)
-//				h = 320 - y;
-//
-//			// Set TFT address window to clipped image bounds
-//			LCD_SetAddrWindow(x, y, x + w - 1, y + h - 1);
-//
-//			for (row = 0; row < h; row++) { // For each scanline...
-//				// Seek to start of scan line.  It might seem labor-
-//				// intensive to be doing this on every line, but this
-//				// method covers a lot of gritty details like cropping
-//				// and scanline padding.  Also, the seek only takes
-//				// place if the file position actually needs to change
-//				// (avoids a lot of cluster math in SD library).
-//				if (flip) // Bitmap is stored bottom-to-top order (normal BMP)
-//					pos = bmpImageoffset + (bmpHeight - 1 - row) * rowSize;
-//				else
-//					// Bitmap is stored top-to-bottom
-//					pos = bmpImageoffset + row * rowSize;
-////					if (bmpFile.position() != pos) { // Need seek?
-////						bmpFile.seek(pos);
-////						buffidx = sizeof(sdbuffer); // Force buffer reload
-////					}
-//				sd_fileOffset(pos);
-//
-//				for (col = 0; col < w; col++) { // For each column...
-//					// Time to read more pixel data?
-////						if (buffidx >= sizeof(sdbuffer)) { // Indeed
-////							// Push LCD buffer to the display first
-////							if (lcdidx > 0) {
-////								tft.pushColors(lcdbuffer, lcdidx, first);
-////								lcdidx = 0;
-////								first = false;
-////							}
-////							bmpFile.read(sdbuffer, sizeof(sdbuffer));
-////							buffidx = 0; // Set index to beginning
-////						}
-//
-//					// Convert pixel from BMP to TFT format
-//					b = sdbuffer[buffidx++];
-//					g = sdbuffer[buffidx++];
-//					r = sdbuffer[buffidx++];
-////					lcdbuffer[lcdidx++] = LCD_Color565(r, g, b);
-//					LCD_DrawPixel(col, row, LCD_Color565(r, g, b));
-//				} // end pixel
-//			} // end scanline
-//			  // Write any remaining data to LCD
-////				if (lcdidx > 0) {
-////					tft.pushColors(lcdbuffer, lcdidx, first);
-////				}
-//			print("Loaded in ");
-////			} // end goodBmp
-//		}
-//	}
-//	sd_closeFile();
-//	if (!goodBmp)
-//		print("BMP format not recognized.");
-//}
+void getBMPImageData(char *file) {
+	uint16_t result16;
+	uint32_t result32;
+	int offset = 0;
+//	char file[] = "miniwoof.bmp";
+	sd_openFile(file);
+	result16 = sd_read16bits(file, offset);
+	print("Identifier: %x\n", result16);
+	offset += 2;
+	result32 = sd_read32bits(file, offset);
+	print("Size: %x\n", result32);
+	offset += 4;
+	result16 = sd_read16bits(file, offset);
+	print("reserverd: %x\n", result16);
+	offset += 2;
+	result16 = sd_read16bits(file, offset);
+	print("reserved: %x\n", result16);
+	offset += 2;
+	result32 = sd_read32bits(file, offset);
+	print("Offset: %x\n", result32);
+	offset += 4;
+	result32 = sd_read32bits(file, offset);
+	print("Header Size: %x\n", result32);
+	offset += 4;
+	result32 = sd_read32bits(file, offset);
+	print("Width_px: %x\n", result32);
+	offset += 4;
+	result32 = sd_read32bits(file, offset);
+	print("Height_px: %x\n", result32);
+	offset += 4;
+	result16 = sd_read16bits(file, offset);
+	print("No. of Color Planes: %x\n", result16);
+	offset += 2;
+	result16 = sd_read16bits(file, offset);
+	print("Bits per pixel: %x\n", result16);
+	offset += 2;
+	result32 = sd_read32bits(file, offset);
+	print("Compression: %x\n", result32);
+	offset += 4;
+	result32 = sd_read32bits(file, offset);
+	print("Image size(bytes): %x\n", result32);
+	offset += 4;
+	result32 = sd_read32bits(file, offset);
+	print("X resolution(PPM): %x\n", result32);
+	offset += 4;
+	result32 = sd_read32bits(file, offset);
+	print("Y resolution(PPM): %x\n", result32);
+	offset += 4;
+	result32 = sd_read32bits(file, offset);
+	print("No. of colors: %x\n", result32);
+	offset += 4;
+	result32 = sd_read32bits(file, offset);
+	print("Important colors: %x\n", result32);
+	offset += 4;
+	sd_closeFile();
+}
+
+void displayPic(char *c, uint16_t row, uint16_t col) {
+	sd_openFile(c);
+	uint32_t picWidth, picHeight;
+	uint32_t offsetPointer = sd_read8(c, 10);
+	print("Offset: %d\n", offsetPointer);
+
+	uint8_t r, b, g;
+	uint8_t color_buf[240];
+	uint16_t pixel_buf[60];
+	uint16_t color_buf_val = 0;
+//	uint16_t pixel_count = 0;
+
+	uint16_t row_pt = row, col_pt = col;
+
+	bool ft = true;
+//	LCD_SetRotation(1);
+
+	picWidth = sd_read32(c, 18);
+	print("Width: %d\n", picWidth);
+	picHeight = sd_read32(c, 22);
+	print("Height: %d\n", picHeight);
+
+	uint32_t k = 0;
+	for (uint32_t i = row + 0; i < row + picWidth; i++) {
+		k = 0;
+		ft = true;
+		color_buf_val = 0;
+		for (uint32_t j = col + 0; j < col + picHeight; j++) {
+			if (ft == true) {
+				f_open(&fil, c, FA_READ);
+				f_lseek(&fil, offsetPointer);
+				f_gets(color_buf, sizeof(color_buf), &fil);
+				offsetPointer += 240;
+//					f_close(&fil);
+				ft = false;
+			}
+			r = color_buf[color_buf_val];
+			color_buf_val++;
+			b = color_buf[color_buf_val];
+			color_buf_val++;
+			g = color_buf[color_buf_val];
+			color_buf_val++;
+			color_buf_val++;
+			pixel_buf[k] = LCD_Color565(g, b, r);
+			k++;
+		}
+//		color_buf_val++;
+//		LCD_pushArray(row_pt, col_pt++, pixel_buf, 60);
+
+		gpio_write(GPIOB, 0, LOW);
+		for (int i = 0; i < 60; i++) {
+			LCD_WriteRegister16(0x0020, row_pt + i);
+			LCD_WriteRegister16(0x0021, col_pt);
+			LCD_WriteRegister16(0x0022, pixel_buf[i]);
+		}
+		col_pt++;
+		gpio_write(GPIOB, 0, HIGH);
+	}
+	sd_closeFile();
+}
+
+void displayPicGen(char *c, uint16_t row, uint16_t col) {
+	sd_openFile(c);
+	uint32_t picWidth, picHeight;
+	uint32_t offsetPointer = sd_read8(c, 10);
+	print("Offset: %d\n", offsetPointer);
+
+	uint8_t r, b, g;
+	uint16_t color_buf_val = 0;
+
+	uint16_t row_pt = row, col_pt = col;
+
+	bool first = true;
+	bool ft = true;
+	LCD_SetRotation(0);
+
+	picWidth = sd_read32(c, 18);
+	print("Width: %d\n", picWidth);
+	picHeight = sd_read32(c, 22);
+	print("Height: %d\n", picHeight);
+
+	uint8_t color_buf[4 * picWidth];
+
+	uint32_t k = 0;
+	for (uint32_t i = row + 0; i < row + picWidth; i++) {
+		k = 0;
+		ft = true;
+		color_buf_val = 0;
+
+		gpio_write(GPIOB, 0, LOW);
+		LCD_WriteRegister16(0x0020, row_pt);
+		LCD_WriteRegister16(0x0021, col_pt);
+
+		for (uint32_t j = col + 0; j < col + picHeight; j++) {
+			if (ft == true) {
+				f_open(&fil, c, FA_READ);
+				f_lseek(&fil, offsetPointer);
+				f_gets(color_buf, sizeof(color_buf), &fil);
+				offsetPointer += (4 * picWidth);
+				ft = false;
+			}
+			r = color_buf[color_buf_val++];
+			b = color_buf[color_buf_val++];
+			g = color_buf[color_buf_val++];
+			color_buf_val++;
+			LCD_WriteRegister16(0x0022, (((g & 0xF8) << 8) | ((b & 0xFC) << 3) | (r >> 3)));
+			k++;
+		}
+		col_pt++;
+		gpio_write(GPIOB, 0, HIGH);
+	}
+	sd_closeFile();
+}
+
+void displayPicGen2(char *c, uint16_t row, uint16_t col) {
+	sd_openFile(c);
+	uint32_t picWidth, picHeight;
+	uint32_t offsetPointer = sd_read8(c, 10);
+	print("Offset: %d\n", offsetPointer);
+
+	uint8_t r, b, g;
+	uint16_t color_buf_val = 0;
+
+	uint16_t row_pt = row, col_pt = col;
+
+	bool first = true;
+	bool ft = true;
+	LCD_SetRotation(1);
+
+	picWidth = sd_read32(c, 18);
+	print("Width: %d\n", picWidth);
+	picHeight = sd_read32(c, 22);
+	print("Height: %d\n", picHeight);
+
+	uint8_t color_buf[4 * picWidth];
+
+	uint32_t k = 0;
+	for (uint32_t i = row + picWidth; i > row + 0; i--){
+		k = 0;
+		ft = true;
+		color_buf_val = 0;
+
+		gpio_write(GPIOB, 0, LOW);
+		LCD_WriteRegister16(0x0020, row_pt);
+		LCD_WriteRegister16(0x0021, col_pt);
+
+		for (uint32_t j = col + picHeight; j > col + 0 ; j--){
+			if (ft == true) {
+				f_open(&fil, c, FA_READ);
+				f_lseek(&fil, offsetPointer);
+				f_gets(color_buf, sizeof(color_buf), &fil);
+				offsetPointer += (4 * picWidth);
+				ft = false;
+			}
+			r = color_buf[color_buf_val++];
+			b = color_buf[color_buf_val++];
+			g = color_buf[color_buf_val++];
+			color_buf_val++;
+			LCD_WriteRegister16(0x0022, (((g & 0xF8) << 8) | ((b & 0xFC) << 3) | (r >> 3)));
+			k++;
+		}
+		col_pt++;
+		gpio_write(GPIOB, 0, HIGH);
+	}
+	sd_closeFile();
+}
+
