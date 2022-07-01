@@ -1,0 +1,15 @@
+main.c:63:6:print_touch	32	static
+main.c:78:6:check_button1_pressed	24	static
+main.c:89:6:change_button1_animation	8	static
+main.c:104:6:button_animation1	40	static
+main.c:114:6:button_animation2	40	static
+main.c:131:6:store_data	16	static
+main.c:144:6:display_data	8	static
+main.c:170:6:display_time	24	static
+main.c:178:6:HAL_UART_RxCpltCallback	16	static
+main.c:185:5:main	72	static
+main.c:294:6:SystemClock_Config	80	static
+main.c:329:13:MX_USART2_UART_Init	8	static
+main.c:362:13:MX_USART3_UART_Init	8	static
+main.c:395:13:MX_GPIO_Init	48	static
+main.c:429:6:Error_Handler	8	static,ignoring_inline_asm

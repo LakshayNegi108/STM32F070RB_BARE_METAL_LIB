@@ -1,0 +1,4 @@
+graphics.c:12:6:LCD_DrawButton1	40	static
+graphics.c:22:6:LCD_DrawButton2	40	static
+graphics.c:32:6:Display_Picture1	32	static
+graphics.c:50:6:Display_Picture2	32	static

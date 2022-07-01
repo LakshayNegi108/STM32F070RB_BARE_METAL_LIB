@@ -1,0 +1,9 @@
+touch.c:10:6:insert_sort	32	static
+touch.c:22:6:adc_Init	24	static
+touch.c:29:6:Touch_Begin	8	static
+touch.c:34:6:GPIO_SetOutput	40	static
+touch.c:40:6:GPIO_SetAnalog	16	static
+touch.c:53:10:Touch_GetX	16	static
+touch.c:84:10:Touch_GetY	16	static
+touch.c:107:6:Touch_Get	32	static
+touch.c:134:10:TOUCH_VAL	40	static
