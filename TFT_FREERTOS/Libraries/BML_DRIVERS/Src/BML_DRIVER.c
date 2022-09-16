@@ -355,21 +355,29 @@ void gpio_IT_config(GPIO_TypeDef *port, uint32_t pinNumber, uint8_t edge) {
 	}
 }
 
-void gpio_IT_EN(uint32_t pinNumber, IRQn_Type irqNumber) {//Interrupt Enable Function
+void gpio_IT_EN(uint8_t pinNumber, IRQn_Type irqNumber) {//Interrupt Enable Function
 	EXTI->IMR |= 1 << pinNumber;	//enable interrupt in EXTI
 	NVIC_EnableIRQ(irqNumber);		//enable interrupt in NVIC
 }
 
-void gpio_IT_DI(uint32_t pinNumber, IRQn_Type irqNumber) {//Interrupt Disable Function
+void gpio_IT_DI(uint8_t pinNumber, IRQn_Type irqNumber) {//Interrupt Disable Function
 	EXTI->IMR &= ~(1 << pinNumber);	//disable interrupt in EXTI
 	NVIC_DisableIRQ(irqNumber);
 }
 
-void gpio_IT_SW(uint32_t pinNumber) {			//Interrupt Software generate
-	EXTI->SWIER |= 1 << pinNumber;				//need work
+void gpio_IT_SW(uint8_t pinNumber) {			//Interrupt Software generate
+	EXTI->SWIER |= 1 << pinNumber;				//TODO: Not Done for now
 }
 
-void gpio_IT_CLR(uint32_t pinNumber) {				//Interrupt clear function
+uint8_t gpio_IT_CHK(uint8_t pinNumber) {			//Interrupt check function
+	if ((EXTI->PR) & (1 << pinNumber)) {				//Check pending register
+		return 1;
+	} else {
+		return 0;
+	}					//Check pending register
+}
+
+void gpio_IT_CLR(uint8_t pinNumber) {				//Interrupt clear function
 	EXTI->PR |= 1 << pinNumber;		//clear pending register
 }
 
@@ -586,6 +594,7 @@ void adc_read(uint16_t *arr, uint8_t arr_len) {
 			;
 		*(arr + i) = ADC1->DR;
 	}
+	ADC1->CR |= ADC_CR_ADSTP;
 }
 
 void adc_start() {

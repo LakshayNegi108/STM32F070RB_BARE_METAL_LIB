@@ -418,7 +418,7 @@ void displayPicGen(char *c, uint16_t row, uint16_t col) {
 
 	bool first = true;
 	bool ft = true;
-	LCD_SetRotation(0);
+	LCD_SetRotation(1);
 
 	picWidth = sd_read32(c, 18);
 	print("Width: %d\n", picWidth);
@@ -436,6 +436,8 @@ void displayPicGen(char *c, uint16_t row, uint16_t col) {
 		gpio_write(GPIOB, 0, LOW);
 		LCD_WriteRegister16(0x0020, row_pt);
 		LCD_WriteRegister16(0x0021, col_pt);
+//				LCD_WriteRegister16(0x0020, col_pt);
+//				LCD_WriteRegister16(0x0021, row_pt);
 
 		for (uint32_t j = col + 0; j < col + picHeight; j++) {
 			if (ft == true) {

@@ -326,10 +326,11 @@ uint8_t gpio_read(GPIO_TypeDef *port, uint32_t pinNumber);
 
 //=============================GPIO INTERRUPT FUNCTION================================//
 void gpio_IT_config(GPIO_TypeDef *port, uint32_t pinNumber, uint8_t edge_sel);
-void gpio_IT_EN(uint32_t pinNumber, IRQn_Type irqNumber);
-void gpio_IT_DI(uint32_t pinNumber, IRQn_Type irqNumber);
-void gpio_IT_SW(uint32_t pinNumber);
-void gpio_IT_CLR(uint32_t pinNumber);
+void gpio_IT_EN(uint8_t pinNumber, IRQn_Type irqNumber);
+void gpio_IT_DI(uint8_t pinNumber, IRQn_Type irqNumber);
+void gpio_IT_SW(uint8_t pinNumber);
+uint8_t gpio_IT_CHK(uint8_t pinNumber);
+void gpio_IT_CLR(uint8_t pinNumber);
 //====================================================================================//
 
 //============================= SERIAL PRINTING FUNCTION==============================//

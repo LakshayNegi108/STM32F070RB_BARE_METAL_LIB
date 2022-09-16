@@ -21,4 +21,4 @@
 ../Libraries/SDCardLib/Src/SDCard.c:290:6:getBMPImageData	40	static
 ../Libraries/SDCardLib/Src/SDCard.c:347:6:displayPic	440	static
 ../Libraries/SDCardLib/Src/SDCard.c:408:6:displayPicGen	104	dynamic
-../Libraries/SDCardLib/Src/SDCard.c:461:6:displayPicGen2	104	dynamic
+../Libraries/SDCardLib/Src/SDCard.c:463:6:displayPicGen2	104	dynamic
