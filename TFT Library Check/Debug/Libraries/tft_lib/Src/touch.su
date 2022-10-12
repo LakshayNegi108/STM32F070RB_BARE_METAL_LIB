@@ -1,0 +1,11 @@
+../Libraries/tft_lib/Src/touch.c:10:6:insert_sort	32	static
+../Libraries/tft_lib/Src/touch.c:22:6:adc_Init	24	static
+../Libraries/tft_lib/Src/touch.c:29:6:Touch_Begin	8	static
+../Libraries/tft_lib/Src/touch.c:34:6:GPIO_SetOutput	40	static
+../Libraries/tft_lib/Src/touch.c:40:6:GPIO_SetInput	40	static
+../Libraries/tft_lib/Src/touch.c:46:6:GPIO_SetAnalog	16	static
+../Libraries/tft_lib/Src/touch.c:66:10:Touch_GetX	32	static
+../Libraries/tft_lib/Src/touch.c:100:10:Touch_GetY	32	static
+../Libraries/tft_lib/Src/touch.c:134:10:Touch_Pressure	48	static
+../Libraries/tft_lib/Src/touch.c:165:6:Touch_Get	32	static
+../Libraries/tft_lib/Src/touch.c:193:10:TOUCH_VAL	40	static
